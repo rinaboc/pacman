@@ -18,7 +18,7 @@ void main() {
 
     vec3 drawColor = ourColor;
 
-    if(dist > 0.5f) {
+    if(dist > 1.0) {
         discard;
     }
 
