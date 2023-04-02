@@ -11,13 +11,13 @@ class GameMaster;
 class Player : public Entity
 {
 private:
+	const int _movementSpeed = 30;
 	int boardPosX, boardPosY;
 	GameMaster* _gm;
-	direction _dir;
-	bool _moving;
-	const int _movementSpeed = 1000;
 	glm::vec3 _movementVec;
 	glm::mat4 _transform;
+	direction _dir;
+	bool _moving;
 
 public:
 	Player(GameMaster* gm, glm::vec3 position, int x, int y);

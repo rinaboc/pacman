@@ -13,86 +13,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 // settings
-const unsigned int SCR_WIDTH = 648;
-const unsigned int SCR_HEIGHT = 648;
-
-float r = 0.0, g = 0.0, b = 0.0;
-
-void setUpTriangle(unsigned int& VBO, unsigned int& VAO) {
-
-    float vertices[] = {
-    -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-     0.0f,  0.3f, 0.0f, 0.0f, 0.0f, 1.0f
-    };
-
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-}
-
-
-void setUpSquare(unsigned int& VAO, unsigned int& VBO, unsigned int& EBO) {
-
-    float vertices[] = {
-     0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f,  // top right
-     0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
-     -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f // top left 
-    };
-
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3    // second triangle
-    };
-
-
-    glGenBuffers(1, &VBO);
-    glGenVertexArrays(1, &VAO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-
-}
-
-void render(Shader shader, unsigned int& VAO) {
-    glClearColor(r, g, b, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    float timeValue = glfwGetTime();
-    float intensity = sin(timeValue) / 2 + 0.5f;
-
-    shader.setFloat("intensity", intensity);
-
-    shader.use();
-
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-}
+const unsigned int SCR_WIDTH = 360;
+const unsigned int SCR_HEIGHT = 360;
 
 GameMaster* GM;
 
@@ -134,18 +56,9 @@ int main() {
         return -1;
     }
 
-    unsigned int VBO2, VAO2, EBO;
-    setUpTriangle(VBO2, VAO2);
+    GM = new GameMaster(SCR_WIDTH, SCR_HEIGHT);
 
-    //setUpSquare(VBO2, VAO2, EBO);
-
-    Shader shader("4.0.shader.vs", "4.0.shader.fs");
-
-    //unsigned int VBO, VAO;
-    GM = new GameMaster();
-
-
-    static double limitUPS = 1.0 / 30.0;
+    static double limitUPS = 1.0 / 120.0;
     static double limitFPS = 1.0 / 60.0;
 
     double lastTime = glfwGetTime(), timer = lastTime;
@@ -170,7 +83,6 @@ int main() {
 
         while (deltaFrame >= 1.0) {
             // - Render at maximum possible frames
-            glClearColor(r, g, b, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             GM->gameRender();
 
@@ -213,27 +125,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     } else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(right);
         GM->getPlayer()->setMoving(true);
-    } else {
-        GM->getPlayer()->setMoving(false);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-        if (r < 1.0)
-            r += 0.1;
-        else
-            r = 0.0;
-    }
-    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-        if (g < 1.0)
-            g += 0.1;
-        else
-            g = 0.0;
-    }
-    if (glfwGetKey(window, GLFW_KEY_B) == GLFW_PRESS) {
-        if (b < 1.0)
-            b += 0.1;
-        else
-            b = 0.0;
     }
 }
 

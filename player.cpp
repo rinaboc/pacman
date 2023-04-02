@@ -26,7 +26,7 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 
-		setShader("playerShader.vs", "playerShader.fs");
+		setShader("shaders/playerShader.vs", "shaders/playerShader.fs");
 
 		_dir = right;
 		_moving = false;
@@ -35,15 +35,19 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 
     void Player::update() {
 
-        std::cout << boardPosX << " " << boardPosY << " ";
+		static int movementTimer = 0;
+
+        // std::cout << boardPosX << " " << boardPosY << " ";
 
 
-        if(_moving && (int)floor(glfwGetTime() * _movementSpeed) % 2 == 0){
+        if(_moving && (++movementTimer == _movementSpeed)){
             int* newPos = _gm->moveObjectOnBoard(player, boardPosX, boardPosY, _dir);
 
             boardPosX = *newPos;
             boardPosY = *(newPos+1);
             _movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
+			
+			movementTimer = 0;
         }
         
 		_transform = glm::mat4(1.0f);
@@ -66,14 +70,15 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 		default:
 			break;
 		}
-		_transform = glm::scale(_transform, glm::vec3(1.0f/36, 1.0f/36, 1.0f/36));
+		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
 		_shader.setMat4("transform", _transform);
 
-		std::cout << _movementVec.x << " " << _movementVec.y << " " << _movementVec.z << std::endl;
+		// std::cout << _movementVec.x << " " << _movementVec.y << " " << _movementVec.z << std::endl;
 	}
 
     void Player::render() {
 		Entity::render();
+
 		float timeValue = glfwGetTime();
 		float intensity = abs( timeValue*1.5f - floor(timeValue*1.5f + 0.5f));
 

@@ -28,7 +28,7 @@ public:
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
 
 		// set basic shaders
-		_shader = Shader("4.0.shader.vs", "4.0.shader.fs");
+		_shader = Shader("shaders/4.0.shader.vs", "shaders/4.0.shader.fs");
 	}
 
 	void setShader(const char* vs, const char* fs) {

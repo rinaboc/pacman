@@ -5,25 +5,32 @@
 #include "player.h"
 #include "constants.h"
 #include "gameboard.h"
-#include "boardLoader.h"
+#include "boardloader.h"
 
 class GameMaster
 {
+public:
+	static const int _tileStep = 18;
+	static const int _boardSize = 20;
+
 private:
-	const int _tileStep = 18;
-	int _gameboard[36][36] = { 0 };
+	int _screenWidth, _screenHeight;
+	int _gameboard[20][20] = { 0 };
+	std::vector<std::vector<int>>* _board = new std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
 	Player* _player;
 	Gameboard* _gameBoard;
 
 public:
-	GameMaster() {
+	GameMaster(int w, int h) : _screenWidth(w), _screenHeight(h) {
 		// std::vector<glm::vec3> a;
-		_player = new Player(this, transformFromBoard(18, 18), 18, 18);
-		_gameBoard = new Gameboard(generateBoard());
+		_player = new Player(this, transformFromBoard(9, 9), 9, 9);
+		_gameBoard = new Gameboard(this, _boardSize, _board);
+
 	}
 
 	void gameUpdate() {
 		_player->update();
+		_gameBoard->update();
 	}
 
 	void gameRender() {
@@ -35,8 +42,8 @@ public:
 
 	glm::vec3 transformFromBoard(int x, int y) const {
 
-		float _x = ((x*_tileStep + _tileStep/2.0) / 648.0f - 0.5f)/0.5f;
-        float _y = -1*((y*_tileStep + _tileStep/2.0) / 648.0f - 0.5f)/0.5f;
+		float _x = ((x*_tileStep + _tileStep/2.0) / _screenWidth - 0.5f)/0.5f;
+        float _y = -1*((y*_tileStep + _tileStep/2.0) / _screenHeight - 0.5f)/0.5f;
 
 		// float _x = sqrt((x - _tileStep)*(x - _tileStep)) / _tileStep;
 		// float _y = sqrt((y - _tileStep)*(y - _tileStep)) / _tileStep;
@@ -57,29 +64,43 @@ public:
 		switch (dir)
 		{
 		case up:
-			if (y != 0 && _gameboard[x][y-1] == none) {
+			if (_gameboard[x][y-1] != obstacle) {
 				ret[1] = y - 1;
+
+				if(_gameboard[x][y-1] == food){
+					_gameBoard->removeFoodFromVec(transformFromBoard(x, y-1));
+				} 
+				
 				_gameboard[x][y - 1] = obj;
 				_gameboard[x][y] = 0;
 			}
 			break;
 		case right:
-			if (x != _tileStep*2-1 && _gameboard[x+1][y] == none) {
+			if (_gameboard[x+1][y] != obstacle) {
 				ret[0] = x + 1;
+				if(_gameboard[x+1][y] == food){
+					_gameBoard->removeFoodFromVec(transformFromBoard(x+1, y));
+				}
 				_gameboard[x+1][y] = obj;
 				_gameboard[x][y] = 0;
 			}
 			break;
 		case down:
-			if (y != _tileStep*2-1 && _gameboard[x][y+1] == none) {
+			if (_gameboard[x][y+1] != obstacle) {
 				ret[1] = y + 1;
+				if(_gameboard[x][y+1] == food){
+					_gameBoard->removeFoodFromVec(transformFromBoard(x, y+1));
+				}
 				_gameboard[x][y + 1] = obj;
 				_gameboard[x][y] = 0;
 			}
 			break;
 		case left:
-			if (x != 0 && _gameboard[x - 1][y] == none) {
+			if (_gameboard[x - 1][y] != obstacle) {
 				ret[0] = x - 1;
+				if(_gameboard[x-1][y] == food){
+					_gameBoard->removeFoodFromVec(transformFromBoard(x-1, y));
+				}
 				_gameboard[x - 1][y] = obj;
 				_gameboard[x][y] = 0;
 			}
@@ -91,27 +112,59 @@ public:
 		return ret;
 	}
 
-	std::vector<glm::vec3> generateBoard() {
+	std::vector<glm::vec3> generateBoard(objectType obj) {
 
-		BoardLoader("boardsrc.png");
+		static BoardLoader bl("board_src.txt");
 
 		std::vector<glm::vec3> ret;
 
-		// left to right
-		for (size_t i = 0; i < _tileStep * 2; i++)
-		{
-			// top to bottom
-			for (size_t j = 0; j < _tileStep * 2; j++)
+		if(obj == obstacle){
+			for (glm::vec3& vec : bl.getObstacleVec())
 			{
-				if(i == 0 || i == _tileStep*2-1 || j == 0 || j == _tileStep * 2-1){
-					_gameboard[i][j] = obstacle;
-					ret.push_back(transformFromBoard(i, j));
-				}
+				_gameboard[(int)vec.x][(int)vec.y] = obstacle;
+				(*_board)[(int)vec.x][(int)vec.y] = obstacle;
+				ret.push_back(transformFromBoard((int)vec.x, (int)vec.y));
 			}
-			
+			return ret;
 		}
+
+		else if(obj == food){
+			for (glm::vec3& vec : bl.getFoodVec()){
+				_gameboard[(int)vec.x][(int)vec.y] = food;
+				(*_board)[(int)vec.x][(int)vec.y] = food;
+				ret.push_back(transformFromBoard((int)vec.x, (int)vec.y));
+			}
+			return ret;
+		}
+
+		else 
+			return ret;
+
+
+		// // left to right
+		// for (size_t i = 0; i < _boardSize; i++)
+		// {
+		// 	// top to bottom
+		// 	for (size_t j = 0; j < _boardSize; j++)
+		// 	{
+		// 		if(i == 0 || i == _boardSize-1 || j == 0 || j == _boardSize-1){
+		// 			_gameboard[i][j] = obstacle;
+		// 			ret.push_back(transformFromBoard(i, j));
+		// 		}
+		// 	}
+			
+		// }
 		
 		return ret;
+	}
+
+	void endGame(){
+		std::cout << "you win!" << std::endl;
+		delete _player;
+		delete _gameBoard;
+		
+		_player = new Player(this, transformFromBoard(9, 9), 9, 9);
+		_gameBoard = new Gameboard(this, _boardSize, _board);
 	}
 
 	int getTileStep() const { return _tileStep; }
