@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-enum direction { up, right, down, left };
-enum objectType { none = 0, player = 1, enemy = 2, obstacle = 3, food = 4};
+enum direction { up = 1, right = 2, down = -1, left = -2 };
+enum objectType { enemyAndFood = -1, none = 0, player = 1, enemy = 2, obstacle = 3, food = 4};
 
 #endif // !CONSTANTS_H

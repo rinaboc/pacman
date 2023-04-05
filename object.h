@@ -1,0 +1,47 @@
+#ifndef OBJECT_H
+#define OBJECT_H
+
+#include <glad/glad.h>
+#include "shader.h"
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+class Object {
+protected:
+	unsigned int _VAO, _VBO, _EBO;
+	Shader _shader;
+
+public:
+	Object() {
+
+		glGenBuffers(1, &_VBO);
+		glGenVertexArrays(1, &_VAO);
+
+		glBindVertexArray(_VAO);
+		glBindBuffer(GL_ARRAY_BUFFER, _VBO);
+
+		glGenBuffers(1, &_EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
+
+		// set basic shaders
+		_shader = Shader("shaders/4.0.shader.vs", "shaders/4.0.shader.fs");
+	}
+
+	void setShader(const char* vs, const char* fs) {
+		_shader = Shader(vs, fs);
+	}
+
+	virtual void render() {
+		_shader.use();
+
+		glBindVertexArray(_VAO);
+		//glDrawArrays(GL_TRIANGLES, 0, 3); // for triangle
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // for square
+	}
+
+	virtual void update() = 0;
+};
+
+#endif

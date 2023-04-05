@@ -1,7 +1,7 @@
 #include "gameboard.h"
 #include "gamemaster.h"
 
-Gameboard::Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &board): Entity(), _gm(gm), _tile(tile), _board(board) {
+Gameboard::Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &board): Entity(0,0), _gm(gm), _tile(tile), _board(board) {
         _obstacleDrawVec = _gm->generateBoard(obstacle);
         _foodDrawVec = _gm->generateBoard(food);
 
@@ -33,8 +33,8 @@ Gameboard::Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &b
 		_foodShader = Shader("shaders/blockShader.vs", "shaders/foodShader.fs");
     }
 
-    void Gameboard::update(){
-        if(_foodDrawVec.empty()){
-            _gm->endGame();
-        }
-    }
+void Gameboard::update(){
+	if(_foodDrawVec.empty()){
+		_gm->endGame();
+	}
+}

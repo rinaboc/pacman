@@ -6,6 +6,7 @@
 #include "constants.h"
 #include "gameboard.h"
 #include "boardloader.h"
+#include "enemy.h"
 
 class GameMaster
 {
@@ -18,23 +19,39 @@ private:
 	int _gameboard[20][20] = { 0 };
 	std::vector<std::vector<int>>* _board = new std::vector<std::vector<int>>(20, std::vector<int>(20, 0));
 	Player* _player;
+	Enemy* _enemy;
 	Gameboard* _gameBoard;
 
 public:
 	GameMaster(int w, int h) : _screenWidth(w), _screenHeight(h) {
 		// std::vector<glm::vec3> a;
-		_player = new Player(this, transformFromBoard(9, 9), 9, 9);
+		_player = new Player(this, transformFromBoard(9, 8), 9, 8);
+		_enemy = new Enemy(this, transformFromBoard(9,10), 9,10);
 		_gameBoard = new Gameboard(this, _boardSize, _board);
 
 	}
 
 	void gameUpdate() {
-		_player->update();
 		_gameBoard->update();
+		_enemy->update();
+		_player->update();
+
+		// system("clear");
+		// for (size_t i = 0; i < 20; i++)
+		// {
+		// 	for (size_t j = 0; j < 20; j++)
+		// 	{
+		// 		std::cout << _gameboard[j][i] << " ";
+		// 	}
+		// 	std::cout << std::endl;
+			
+		// }
+		
 	}
 
 	void gameRender() {
 		_gameBoard->render();
+		_enemy->render();
 		_player->render();
 	}
 
@@ -56,15 +73,11 @@ public:
 		return glm::vec3(_x, _y, 0);
 	}
 
-	int* moveObjectOnBoard(objectType obj, int x, int y, direction dir) {
-		static int ret[2];
-		ret[0] = x;
-		ret[1] = y;
+	void moveObjectOnBoard(objectType obj, int x, int y, direction dir, Entity* entity) {
+		int ret[2] = {x, y};
 
-		switch (dir)
-		{
-		case up:
-			if (_gameboard[x][y-1] != obstacle) {
+		if(obj == player){
+			if (dir == up && _gameboard[x][y-1] != obstacle) {
 				ret[1] = y - 1;
 
 				if(_gameboard[x][y-1] == food){
@@ -74,9 +87,8 @@ public:
 				_gameboard[x][y - 1] = obj;
 				_gameboard[x][y] = 0;
 			}
-			break;
-		case right:
-			if (_gameboard[x+1][y] != obstacle) {
+
+			else if (dir == right && _gameboard[x+1][y] != obstacle) {
 				ret[0] = x + 1;
 				if(_gameboard[x+1][y] == food){
 					_gameBoard->removeFoodFromVec(transformFromBoard(x+1, y));
@@ -84,9 +96,8 @@ public:
 				_gameboard[x+1][y] = obj;
 				_gameboard[x][y] = 0;
 			}
-			break;
-		case down:
-			if (_gameboard[x][y+1] != obstacle) {
+
+			else if (dir == down && _gameboard[x][y+1] != obstacle) {
 				ret[1] = y + 1;
 				if(_gameboard[x][y+1] == food){
 					_gameBoard->removeFoodFromVec(transformFromBoard(x, y+1));
@@ -94,9 +105,8 @@ public:
 				_gameboard[x][y + 1] = obj;
 				_gameboard[x][y] = 0;
 			}
-			break;
-		case left:
-			if (_gameboard[x - 1][y] != obstacle) {
+
+			else if (dir == left && _gameboard[x - 1][y] != obstacle) {
 				ret[0] = x - 1;
 				if(_gameboard[x-1][y] == food){
 					_gameBoard->removeFoodFromVec(transformFromBoard(x-1, y));
@@ -104,12 +114,59 @@ public:
 				_gameboard[x - 1][y] = obj;
 				_gameboard[x][y] = 0;
 			}
-			break;
-		default:
-			break;
 		}
 
-		return ret;
+		else if(obj == enemy){
+			bool canMove = false;
+			if (dir == up && _gameboard[x][y-1] != obstacle) {
+				ret[1] = y - 1;
+
+				if(_gameboard[x][y-1] == food){
+					_gameboard[x][y - 1] = enemyAndFood;
+				} else 
+					_gameboard[x][y-1] = obj;
+				
+				canMove = true;
+			}
+
+			else if (dir == right && _gameboard[x+1][y] != obstacle) {
+				ret[0] = x + 1;
+				if(_gameboard[x+1][y] == food){
+					_gameboard[x+1][y] = enemyAndFood;
+				} else 
+					_gameboard[x+1][y] = obj;
+				
+				canMove = true;
+			}
+
+			else if (dir == down && _gameboard[x][y+1] != obstacle) {
+				ret[1] = y + 1;
+				if(_gameboard[x][y+1] == food){
+					_gameboard[x][y+1] = enemyAndFood;
+				} else _gameboard[x][y+1] = obj;
+
+				canMove = true;
+			}
+
+			else if (dir == left && _gameboard[x - 1][y] != obstacle) {
+				ret[0] = x - 1;
+				if(_gameboard[x-1][y] == food){
+					_gameboard[x-1][y] = enemyAndFood;
+				} else 
+					_gameboard[x - 1][y] = obj;
+
+				canMove = true;
+			}
+
+			if(!canMove) return;
+
+			if(_gameboard[x][y] == enemyAndFood)
+				_gameboard[x][y] = food;
+			else
+				_gameboard[x][y] = 0;
+		}
+
+		entity->setPos(ret[0], ret[1]);
 	}
 
 	std::vector<glm::vec3> generateBoard(objectType obj) {
@@ -155,6 +212,21 @@ public:
 			
 		// }
 		
+		return ret;
+	}
+
+	std::vector<direction> possibleDirs(int x, int y){
+		std::vector<direction> ret;
+
+		if(_gameboard[x-1][y] != obstacle)
+			ret.push_back(left);
+		if(_gameboard[x+1][y] != obstacle)
+			ret.push_back(right);
+		if(_gameboard[x][y-1] != obstacle)
+			ret.push_back(up);
+		if(_gameboard[x][y+1] != obstacle)
+			ret.push_back(down);
+
 		return ret;
 	}
 

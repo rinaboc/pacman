@@ -1,7 +1,7 @@
 #include "player.h"
 #include "gamemaster.h"
 
-Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boardPosX(x), boardPosY(y), _gm(gm) {
+Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y), _gm(gm) {
 		float vertices[] = {
 			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  // top right
 			 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, // bottom right
@@ -41,10 +41,8 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 
 
         if(_moving && (++movementTimer == _movementSpeed)){
-            int* newPos = _gm->moveObjectOnBoard(player, boardPosX, boardPosY, _dir);
+            _gm->moveObjectOnBoard(player, boardPosX, boardPosY, _dir, this);
 
-            boardPosX = *newPos;
-            boardPosY = *(newPos+1);
             _movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
 			
 			movementTimer = 0;
@@ -71,7 +69,6 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 			break;
 		}
 		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
-		_shader.setMat4("transform", _transform);
 
 		// std::cout << _movementVec.x << " " << _movementVec.y << " " << _movementVec.z << std::endl;
 	}
@@ -85,6 +82,7 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(), boa
 		// steps
 		intensity = (round(intensity * 10)) / 10;
 
+		_shader.setMat4("transform", _transform);
 		_shader.setFloat("intensity", intensity);	
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // for square
