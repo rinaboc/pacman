@@ -1,5 +1,6 @@
 #include "player.h"
 #include "gamemaster.h"
+#include <cstdlib>
 
 Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y), _gm(gm) {
 		float vertices[] = {
@@ -37,53 +38,60 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y),
 
 		static int movementTimer = 0;
 
-        // std::cout << boardPosX << " " << boardPosY << " ";
+        if(_moving && (++movementTimer >= _movementSpeed)){
+			int oldX = boardPosX;
+			int oldY = boardPosY;
 
-
-        if(_moving && (++movementTimer == _movementSpeed)){
             _gm->moveObjectOnBoard(player, boardPosX, boardPosY, _dir, this);
 
-            _movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
-			
-			movementTimer = 0;
+			// change direction if player hits wall
+			if(oldX == boardPosX && oldY == boardPosY){
+				for(direction d : _gm->possibleDirs(boardPosX, boardPosY)){
+					if(abs(_dir) != abs(d)){
+						_dir = d;
+						break;
+					}
+				}
+			} else {
+            	_movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
+				movementTimer = 0;
+			}
         }
-        
-		_transform = glm::mat4(1.0f);
-		_transform = glm::translate(_transform, _movementVec);
-
-		switch (_dir)
-		{
-		case up:
-			_transform = glm::rotate(_transform, glm::radians(90.0f), glm::vec3(0.0, 0.0, 1.0));
-			break;
-		case right:
-			_transform = glm::rotate(_transform, glm::radians(0.0f), glm::vec3(0.0, 0.0, 1.0));
-			break;
-		case down:
-			_transform = glm::rotate(_transform, glm::radians(270.0f), glm::vec3(0.0, 0.0, 1.0));
-			break;
-		case left:
-			_transform = glm::rotate(_transform, glm::radians(180.0f), glm::vec3(0.0, 0.0, 1.0));
-			break;
-		default:
-			break;
-		}
-		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
-
-		// std::cout << _movementVec.x << " " << _movementVec.y << " " << _movementVec.z << std::endl;
 	}
 
     void Player::render() {
 		Entity::render();
 
-		float timeValue = glfwGetTime();
-		float intensity = abs( timeValue*1.5f - floor(timeValue*1.5f + 0.5f));
+		// player location
+		_transform = glm::mat4(1.0f);
 
-		// steps
+		float angle = 0.0f;
+		if(_dir == up) angle = 90.0f;
+		else if(_dir == down) angle = 270.0f;
+		else if(_dir == left) angle = 180.0f;
+
+		_transform = glm::translate(_transform, _movementVec);
+		_transform = glm::rotate(_transform, glm::radians(angle), glm::vec3(0.0, 0.0, 1.0));
+		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
+
+		// mouth animation
+		float timeValue = glfwGetTime() * 2;
+		float intensity = abs( timeValue*1.5f - floor(timeValue*1.5f + 0.5f));
 		intensity = (round(intensity * 10)) / 10;
 
 		_shader.setMat4("transform", _transform);
 		_shader.setFloat("intensity", intensity);	
 
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // for square
+	}
+
+	void Player::setDirection(direction dir){
+		std::vector<direction> allowedDirs = _gm->possibleDirs(boardPosX, boardPosY);
+
+		for(direction& d : allowedDirs){
+			if(d == dir){
+				_dir = dir;
+				return;
+			}
+		}
 	}

@@ -8,7 +8,7 @@ void main() {
     vec3 drawColor = vec3(1.0, 0.7, 0.3);
     float dist = distance(vertexPosition.xy, vec2(0, 0));    
 
-    if(dist > 0.4){
+    if(dist > 0.3){
         discard;
     }
 

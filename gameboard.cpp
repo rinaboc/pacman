@@ -1,15 +1,15 @@
 #include "gameboard.h"
 #include "gamemaster.h"
 
-Gameboard::Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &board): Entity(0,0), _gm(gm), _tile(tile), _board(board) {
+Gameboard::Gameboard(GameMaster* gm, int tile): Entity(0,0), _gm(gm), _tile(tile) {
         _obstacleDrawVec = _gm->generateBoard(obstacle);
         _foodDrawVec = _gm->generateBoard(food);
 
         float vertices[] = {
-			 1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f,  // top right
-			 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom right
-			 -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
-			 -1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 1.0f // top left 
+			 1.0f,  1.0f, 0.0f, 0.4f, 0.0f, 1.0f,  // top right
+			 1.0f, -1.0f, 0.0f, 0.4f, 0.0f, 1.0f, // bottom right
+			 -1.0f, -1.0f, 0.0f, 0.4f, 0.0f, 1.0f, // bottom left
+			 -1.0f,  1.0f, 0.0f, 0.4f, 0.0f, 1.0f // top left 
 		};
 
 		unsigned int indices[] = {  // note that we start from 0!
@@ -34,7 +34,10 @@ Gameboard::Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &b
     }
 
 void Gameboard::update(){
+	static double lastWin = 0;
+
 	if(_foodDrawVec.empty()){
-		_gm->endGame();
+		_gm->endGame("You win! Completion time: " + std::to_string((int)(glfwGetTime()-lastWin)) + " seconds.");
+		lastWin = glfwGetTime();
 	}
 }

@@ -17,7 +17,7 @@ private:
 
 	std::vector<std::vector<int>>* _board;
 public:
-    Gameboard(GameMaster* gm, int tile, std::vector<std::vector<int>>* &board);
+    Gameboard(GameMaster* gm, int tile);
 
     void update() override;
 

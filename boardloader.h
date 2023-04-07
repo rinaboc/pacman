@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include "constants.h"
 
 class BoardLoader 
 {

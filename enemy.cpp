@@ -2,12 +2,12 @@
 #include "gamemaster.h"
 #include <cstdlib>
 
-Enemy::Enemy(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x,y),_gm(gm){
+Enemy::Enemy(GameMaster* gm, glm::vec3 position, int x, int y, glm::vec3 colormask) : Entity(x,y),_gm(gm), _colorMask(colormask) {
     float vertices[] = {
-			 1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f,  // top right
-			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
-			 -1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-			 -1.0f,  1.0f, 0.0f, 1.0f, 0.0f, 0.0f // top left 
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f,  // top right
+			 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, // bottom right
+			 -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, // bottom left
+			 -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 1.0f // top left 
 		};
 
 		unsigned int indices[] = {  // note that we start from 0!
@@ -35,22 +35,17 @@ Enemy::Enemy(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x,y),_gm
 }
 
 void Enemy::update(){
-		static int movementTimer = 0;
 
-        // std::cout << boardPosX << " " << boardPosY << " ";
-
-
-        if(++movementTimer >= (_movementSpeed*2)){
+        if(++movementTimer >= _movementSpeed){
 			int tmpx = boardPosX;
 			int tmpy = boardPosY;
 
+			// at intersections generate a random direction
 			std::vector<direction> possibleDirs = _gm->possibleDirs(boardPosX, boardPosY);
 			if(possibleDirs.size() > 2){
 				
-				direction newDir[possibleDirs.size()-1];
-
-				std::cout << _dir;
 				int i = 0;
+				direction newDir[possibleDirs.size()-1];
 				for(direction dir: possibleDirs){
 					if(dir != _dir * (-1)){
 						newDir[i++] = dir;
@@ -58,31 +53,32 @@ void Enemy::update(){
 				}
 
 				_dir = newDir[rand() % (possibleDirs.size()-1)];
-
-				std::cout << " " << _dir << std::endl;
 			}
 
-            _gm->moveObjectOnBoard((objectType)_ID, boardPosX, boardPosY, _dir, this);
+            _gm->moveObjectOnBoard(enemy, boardPosX, boardPosY, _dir, this);
 
-			if(boardPosX == tmpx && boardPosY == tmpy){
+			if(boardPosX == tmpx && boardPosY == tmpy){ // when running into wall change direction
 				_dir = (direction)(((int)(floor(glfwGetTime()*10)) % 4)-2);
 			} 
-			else {
+			else { // otherwise reset timer and move
 				_movementVec = _gm->transformFromBoard(boardPosX, boardPosY);				
 				movementTimer = 0;
 			}
 
         }
-
-		_transform = glm::mat4(1.0f);
-		_transform = glm::translate(_transform, _movementVec);
-		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
 }
 
 void Enemy::render(){
         Entity::render();
 
-		_shader.setFloat("wave", glfwGetTime()*5);
+		// draw position
+		_transform = glm::mat4(1.0f);
+		_transform = glm::translate(_transform, _movementVec);
+		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
+
 		_shader.setMat4("transform", _transform);
+		_shader.setVec3("colorMask", _colorMask);
+		_shader.setFloat("wave", glfwGetTime()*8); // animation
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); // for square
 }

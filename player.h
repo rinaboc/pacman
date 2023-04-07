@@ -1,4 +1,3 @@
-#pragma once
 #include "entity.h"
 #include "constants.h"
 #include <math.h>
@@ -32,5 +31,7 @@ public:
 	void movePlayer(glm::vec3 mvec) {
 		_movementVec = mvec;
 	}
+
+	void setDirection(direction dir);
 };
 #endif

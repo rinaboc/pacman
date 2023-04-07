@@ -13,8 +13,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
 // settings
-const unsigned int SCR_WIDTH = 360;
-const unsigned int SCR_HEIGHT = 360;
+const unsigned int SCR_WIDTH = 462;
+const unsigned int SCR_HEIGHT = 462;
 
 GameMaster* GM;
 
@@ -57,61 +57,17 @@ int main() {
     }
 
     GM = new GameMaster(SCR_WIDTH, SCR_HEIGHT);
-
-    static double limitUPS = 1.0 / 120.0;
-    static double limitFPS = 1.0 / 60.0;
-
-    double lastTime = glfwGetTime(), timer = lastTime;
-    double deltaTime = 0, nowTime = 0, deltaFrame = 0;
-    int frames = 0, updates = 0;
-
-    // render loop
-    // -----------
-    while (!glfwWindowShouldClose(window)) {
-
-        nowTime = glfwGetTime();
-        deltaTime += (nowTime - lastTime) / limitUPS;
-        deltaFrame += (nowTime - lastTime) / limitFPS;
-        lastTime = nowTime;
-
-        // - Only update at 30 frames / s
-        while (deltaTime >= 1.0) {
-            GM->gameUpdate();   // - Update function
-            updates++;
-            deltaTime--;
-        }
-
-        while (deltaFrame >= 1.0) {
-            // - Render at maximum possible frames
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            GM->gameRender();
-
-            frames++;
-            deltaFrame--;
-        }
-
-        // - Reset after one second
-        if (glfwGetTime() - timer > 1.0) {
-            timer++;
-            // std::cout << "FPS: " << frames << " Updates:" << updates << std::endl;
-            updates = 0, frames = 0;
-        }
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+    GM->startGameLoop(window);
     glfwTerminate();
+
     return 0;
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
+        delete GM;
         glfwSetWindowShouldClose(window, true);
+    }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(left);
