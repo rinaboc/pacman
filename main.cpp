@@ -18,7 +18,7 @@ const unsigned int SCR_HEIGHT = 462;
 
 GameMaster* GM;
 
-int loadGlfwWindow(GLFWwindow * &window) {
+int loadGlfwWindow(GLFWwindow*& window) {
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -51,10 +51,14 @@ int loadGlfwWindow(GLFWwindow * &window) {
 }
 
 int main() {
+    
     GLFWwindow* window;
     if (loadGlfwWindow(window) == -1) {
         return -1;
     }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     GM = new GameMaster(SCR_WIDTH, SCR_HEIGHT);
     GM->startGameLoop(window);
@@ -64,21 +68,24 @@ int main() {
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
-        delete GM;
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+        delete GM;
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(left);
         GM->getPlayer()->setMoving(true);
-    } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    }
+    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(down);
         GM->getPlayer()->setMoving(true);
-    } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    }
+    else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(up);
         GM->getPlayer()->setMoving(true);
-    } else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+    }
+    else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         GM->getPlayer()->setDirection(right);
         GM->getPlayer()->setMoving(true);
     }

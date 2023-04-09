@@ -2,38 +2,38 @@
 
 
 void GameMaster::startGameLoop(GLFWwindow* window){
-    static double limitUPS = 1.0 / 120.0;
-    static double limitFPS = 1.0 / 60.0;
+    const double limitUPS = 1.0 / 100.0;
+    const double limitFPS = 1.0 / 60.0;
 
-    double lastTime = glfwGetTime(), timer = lastTime;
-    double deltaTime = 0, nowTime = 0, deltaFrame = 0;
+    double previousTime = glfwGetTime(), timer = previousTime;
+    double deltaU = 0, currentTime = 0, deltaF = 0;
     int frames = 0, updates = 0;
 
     while (!glfwWindowShouldClose(window)) {
 
-        nowTime = glfwGetTime();
-        deltaTime += (nowTime - lastTime) / limitUPS;
-        deltaFrame += (nowTime - lastTime) / limitFPS;
-        lastTime = nowTime;
+        currentTime = glfwGetTime();
+        deltaU += (currentTime - previousTime) / limitUPS;
+        deltaF += (currentTime - previousTime) / limitFPS;
+        previousTime = currentTime;
 
-        while (deltaTime >= 1.0) { // update according to UPS
+        while (deltaU >= 1.0) { // update according to UPS
             gameUpdate();
             updates++;
-            deltaTime--;
+            deltaU--;
         }
 
-        while (deltaFrame >= 1.0) { // render according to FPS
+        while (deltaF >= 1.0) { // render according to FPS
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glClearColor(0.1f, 0, 0.2f, 1);
             gameRender();
-
             frames++;
-            deltaFrame--;
+            deltaF--;
         }
 
         // FPS & UPS counter, reset every second
         if (glfwGetTime() - timer > 1.0) {
             timer++;
-            std::cout << "FPS: " << frames << " Updates:" << updates << std::endl;
+            //std::cout << "FPS: " << frames << " Updates:" << updates << std::endl;
             updates = 0, frames = 0;
         }
 
@@ -42,36 +42,37 @@ void GameMaster::startGameLoop(GLFWwindow* window){
     }
 }
 
-void GameMaster::gameUpdate() const {
-    if(_gameboard != nullptr)
-        _gameBoard->update();
+void GameMaster::gameUpdate() {
 
-    for(Enemy* enemy: _enemies){
-        enemy->update();
+    if (!_game) {
+        delete _gameBoard;
+        delete _player;
+        for (size_t i = 0; i < (size_t)_enemies.size(); i++)
+        {
+            delete _enemies[i];
+        } _enemies.clear();
+
+        initClasses();
+        _game = true;
     }
 
-    if(_player != nullptr)
-        _player->update();
-
-    // if((int)(glfwGetTime()*10) % 10 != 0) return;
-    // system("clear");
-    // for (size_t i = 0; i < 20; i++)
-    // {
-    // 	for (size_t j = 0; j < 20; j++)
-    // 	{
-    // 		std::cout << _gameboard[j][i] << " ";
-    // 	}
-    // 	std::cout << std::endl;
-    // }
+    _gameBoard->update();
+    if (_player->getMoving()) {
+        for(Enemy* enemy: _enemies){
+             enemy->update();
+        }
+    }
+     _player->update();
 }
 
 void GameMaster::gameRender() const {
-    if(_gameBoard != nullptr) _gameBoard->render();
+    if (!_game) return;
 
-    for(Enemy* enemy: _enemies)
+    _gameBoard->render();
+    for (Enemy* enemy : _enemies) {
         enemy->render();
-
-    if(_player != nullptr) _player->render();
+    }
+    _player->render();
 }
 
 glm::vec3 GameMaster::transformFromBoard(int x, int y) const {
@@ -87,7 +88,7 @@ void GameMaster::moveObjectOnBoard(objectType obj, int x, int y, direction dir, 
 
     int ret[2] = {x, y};
     bool canMove = false;
-    int * nextLoc;
+    int * nextLoc = nullptr;
 
     if (dir == up && _gameboard[x][y-1] != obstacle) {
         ret[1] = y - 1;
@@ -129,7 +130,7 @@ void GameMaster::moveObjectOnBoard(objectType obj, int x, int y, direction dir, 
         canMove = true;
     }
 
-    if(!canMove) return;
+    if(!canMove || (nextLoc == nullptr)) return;
 
     if(obj == player){
         if(*nextLoc == enemy || *nextLoc == enemyAndFood){ // player collides with enemy
@@ -193,4 +194,9 @@ std::vector<glm::vec3> GameMaster::generateBoard(objectType obj) {
     }
     
     return ret;
+}
+
+void GameMaster::endGame(std::string msg) {
+    std::cout << msg << std::endl;
+    _game = false;
 }

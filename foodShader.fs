@@ -9,8 +9,11 @@ void main() {
     float dist = distance(vertexPosition.xy, vec2(0, 0));    
 
     if(dist > 0.3){
-        discard;
+        FragColor = vec4(drawColor, (1-dist*1.7));
+    } else {
+         FragColor = vec4(drawColor, 1.0f);
     }
 
-    FragColor = vec4(drawColor, 1.0f);
+
+
 }

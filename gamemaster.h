@@ -9,8 +9,8 @@
 class GameMaster
 {
 public:
-	static const int _tileStep = 22;
-	static const int _boardSize = 21;
+	const int _tileStep = 22;
+	const int _boardSize = 21;
 
 private:
 	int _screenWidth, _screenHeight;
@@ -19,15 +19,19 @@ private:
 	std::vector<Enemy*> _enemies;
 	Gameboard* _gameBoard;
 
+	bool _game = false;
+
 public:
 	GameMaster(int w, int h) : _screenWidth(w), _screenHeight(h) {
 		initClasses();
+		_game = true;
 	}
 
 	~GameMaster(){
 		delete _player;
-		for(Enemy* enemy: _enemies){
-			delete enemy;
+		for (size_t i = 0; i < (size_t)_enemies.size(); i++)
+		{
+			delete _enemies[i];
 		}
 		delete _gameBoard;
 	}
@@ -35,16 +39,16 @@ public:
 	void initClasses(){
 		_player = new Player(this, transformFromBoard(10, 1), 10, 1);
 
-		_enemies.push_back(new Enemy(this, transformFromBoard(9,10), 9,10, glm::vec3(1, 0, 0)));
-		_enemies.push_back(new Enemy(this, transformFromBoard(10,10), 10,10, glm::vec3(0, 1, 0)));
-		_enemies.push_back(new Enemy(this, transformFromBoard(10,11), 10,11, glm::vec3(0, 0, 1)));
+		_enemies.push_back(new Enemy(this, transformFromBoard(9,10), 9,10, glm::vec3(1, 0, 1)));
+		_enemies.push_back(new Enemy(this, transformFromBoard(10,10), 10,10, glm::vec3(0, 1, 1)));
+		_enemies.push_back(new Enemy(this, transformFromBoard(10,11), 10,11, glm::vec3(0.2, 0.1, 1)));
 
 		_gameBoard = new Gameboard(this, _boardSize);
 	}
 
 	void startGameLoop(GLFWwindow* window);
 
-	void gameUpdate() const;
+	void gameUpdate();
 
 	void gameRender() const;
 
@@ -71,19 +75,13 @@ public:
 		return ret;
 	}
 
-	void endGame(std::string msg){
-		std::cout << msg << std::endl;
-		delete _player;
-		delete _gameBoard;
-		for (size_t i = 0; i < _enemies.size(); i++)
-			delete _enemies[i];
-		_enemies.clear();
-		
-		
-		initClasses();
-	}
+	void endGame(std::string msg);
 
 	int getTileStep() const { return _tileStep; }
+
+	void setGame(bool g) {
+		_game = g;
+	}
 };
 
 

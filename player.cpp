@@ -4,10 +4,10 @@
 
 Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y), _gm(gm) {
 		float vertices[] = {
-			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 0.0f,  // top right
-			 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, // bottom right
-			 -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, // bottom left
-			 -1.0f,  1.0f, 0.0f, 1.0f, 1.0f, 0.0f // top left 
+			 1.0f,  1.0f, 0.0f, 1.0f, 0.9f, 0.0f,  // top right
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.9f, 0.0f, // bottom right
+			 -1.0f, -1.0f, 0.0f, 1.0f, 0.9f, 0.0f, // bottom left
+			 -1.0f,  1.0f, 0.0f, 1.0f, 0.9f, 0.0f // top left 
 		};
 
 		unsigned int indices[] = {  // note that we start from 0!
@@ -30,8 +30,9 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y),
 		setShader("shaders/playerShader.vs", "shaders/playerShader.fs");
 
 		_dir = right;
-		_moving = false;
 		_movementVec = position;
+		_transform = glm::mat4(1.0f);
+		_moving = false;
 	}
 
     void Player::update() {
@@ -44,19 +45,10 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y),
 
             _gm->moveObjectOnBoard(player, boardPosX, boardPosY, _dir, this);
 
-			// change direction if player hits wall
-			if(oldX == boardPosX && oldY == boardPosY){
-				for(direction d : _gm->possibleDirs(boardPosX, boardPosY)){
-					if(abs(_dir) != abs(d)){
-						_dir = d;
-						break;
-					}
-				}
-			} else {
-            	_movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
-				movementTimer = 0;
-			}
-        }
+        	_movementVec = _gm->transformFromBoard(boardPosX, boardPosY);
+			movementTimer = 0;
+
+		}
 	}
 
     void Player::render() {
@@ -72,7 +64,7 @@ Player::Player(GameMaster* gm, glm::vec3 position, int x, int y) : Entity(x, y),
 
 		_transform = glm::translate(_transform, _movementVec);
 		_transform = glm::rotate(_transform, glm::radians(angle), glm::vec3(0.0, 0.0, 1.0));
-		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
+		_transform = glm::scale(_transform, glm::vec3(1.0f/_gm->_boardSize, 1.0f/_gm->_boardSize, 1.0f/_gm->_boardSize));
 
 		// mouth animation
 		float timeValue = glfwGetTime() * 2;

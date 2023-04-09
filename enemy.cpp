@@ -31,6 +31,7 @@ Enemy::Enemy(GameMaster* gm, glm::vec3 position, int x, int y, glm::vec3 colorma
 
 		_dir = right;
 		_movementVec = position;
+		_transform = glm::mat4(1.0f);
 		srand((unsigned) time(NULL));
 }
 
@@ -45,14 +46,15 @@ void Enemy::update(){
 			if(possibleDirs.size() > 2){
 				
 				int i = 0;
-				direction newDir[possibleDirs.size()-1];
+				direction* newDir = new direction[possibleDirs.size()-1];
 				for(direction dir: possibleDirs){
 					if(dir != _dir * (-1)){
-						newDir[i++] = dir;
+						*(newDir + i) = dir;
+						i++;
 					}
 				}
 
-				_dir = newDir[rand() % (possibleDirs.size()-1)];
+				_dir = *(newDir + (rand() % (possibleDirs.size() - 1)));
 			}
 
             _gm->moveObjectOnBoard(enemy, boardPosX, boardPosY, _dir, this);
@@ -74,7 +76,7 @@ void Enemy::render(){
 		// draw position
 		_transform = glm::mat4(1.0f);
 		_transform = glm::translate(_transform, _movementVec);
-		_transform = glm::scale(_transform, glm::vec3(1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize, 1.0f/GameMaster::_boardSize));
+		_transform = glm::scale(_transform, glm::vec3(1.0f/_gm->_boardSize, 1.0f/_gm->_boardSize, 1.0f/_gm->_boardSize));
 
 		_shader.setMat4("transform", _transform);
 		_shader.setVec3("colorMask", _colorMask);

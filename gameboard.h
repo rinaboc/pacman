@@ -14,8 +14,6 @@ private:
 	std::vector<glm::vec3> _foodDrawVec;
 	int _tile = 0;
 	Shader _foodShader;
-
-	std::vector<std::vector<int>>* _board;
 public:
     Gameboard(GameMaster* gm, int tile);
 

@@ -7,12 +7,12 @@
 class Entity : public Object
 {
 protected:
-	const int _movementSpeed = 30;
+	const int _movementSpeed = 20;
 	int boardPosX, boardPosY;
 	direction _dir;
 
 public:
-	Entity(int x, int y) : Object(), boardPosX(x), boardPosY(y){}
+	Entity(int x, int y) : Object(), boardPosX(x), boardPosY(y), _dir(left){}
 
 	void setDirection(direction dir) {
 		_dir = dir;

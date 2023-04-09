@@ -26,6 +26,9 @@ void main() {
         discard;
     }
     
-
-    FragColor = vec4(drawColor, 1.0f);
+    if(dist > 0.9 && dist < 1.0){ // smooth edges
+        FragColor = vec4(drawColor, abs((dist - 1f)/0.1f));
+    } else {
+         FragColor = vec4(drawColor, 1.0f);
+    }
 }
